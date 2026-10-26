@@ -18,6 +18,7 @@ REST API for TaskFlow, a multi-workspace project and task management application
 ## Tech stack
 
 Node.js (ES modules), Express, MongoDB, Mongoose, Zod, JSON Web Tokens, Argon2, cookie-parser, Helmet, Nodemailer.
+Tested with Vitest and Supertest
 
 ## Folder structure
 
