@@ -2,7 +2,6 @@
 
 REST API for TaskFlow, a multi-workspace project and task management application built with **Node.js, Express, MongoDB, and Mongoose**.
 
-> This README documents the source snapshot supplied on October 26, 2026. It reflects the **current `/api/...` routes**, not the older `/api/v1/...` examples. The ZIP contains `src/` only, so package scripts and dependency versions should be verified against your own `package.json`.
 
 ## Features
 
