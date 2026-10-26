@@ -1,6 +1,6 @@
+import crypto from "node:crypto";
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
-import crypto from "node:crypto";
 import RefreshSession from "../models/refresh-session.model.js";
 
 import User from "../models/user.model.js";
@@ -94,7 +94,10 @@ export const createUser = async (req, res, next) => {
     const refreshToken = jwt.sign(
       { userId: user._id.toString(), type: "refresh" },
       process.env.REFRESH_TOKEN_SECRET,
-      { expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || "7d" },
+      {
+        expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || "7d",
+        jwtid: crypto.randomUUID(),
+      },
     );
 
     // Set tokens in HTTP-only cookies.
@@ -232,6 +235,7 @@ export const loginUser = async (req, res, next) => {
       process.env.REFRESH_TOKEN_SECRET,
       {
         expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || "7d",
+        jwtid: crypto.randomUUID(),
       },
     );
 
@@ -344,7 +348,10 @@ export const refreshUser = async (req, res, next) => {
     const newAccessToken = jwt.sign(
       { userId: user._id.toString() },
       process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || "15m" },
+      {
+        expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || "15m",
+        jwtid: crypto.randomUUID(),
+      },
     );
 
     const newRefreshToken = jwt.sign(
