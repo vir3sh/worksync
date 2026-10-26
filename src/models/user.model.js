@@ -4,16 +4,19 @@ const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
+      required: [true, "Name is required"],
       trim: true,
+      minlength: 2,
+      maxlength: 80,
     },
 
     email: {
       type: String,
-      required: true,
+      required: [true, "Email is required"],
       unique: true,
       lowercase: true,
       trim: true,
+      maxlength: 254,
     },
 
     password: {
@@ -26,6 +29,12 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["employee", "hr", "manager", "admin"],
       default: "employee",
+    },
+
+    status: {
+      type: String,
+      enum: ["active", "inactive"],
+      default: "active",
     },
   },
   {
