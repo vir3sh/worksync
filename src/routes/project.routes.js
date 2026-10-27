@@ -17,6 +17,8 @@ import {
   updateTaskStatus,
 } from "../controller/task.controller.js";
 import { getTaskActivity } from "../controller/task-activity.controller.js";
+import { requireTaskAssignmentRole } from "../middleware/requireTaskAssignmentRole.js";
+import { requireTaskManagementRole } from "../middleware/requireTaskManagementRole.js";
 
 const projectRouter = Router();
 
@@ -56,6 +58,7 @@ projectRouter.get(
 projectRouter.post(
   "/:workspaceId/projects/:projectId/tasks",
   authenticateUser,
+  requireTaskAssignmentRole,
   createTask,
 );
 
@@ -80,6 +83,7 @@ projectRouter.patch(
 projectRouter.delete(
   "/:workspaceId/projects/:projectId/tasks/:taskId",
   authenticateUser,
+  requireTaskManagementRole,
   deleteTask,
 );
 

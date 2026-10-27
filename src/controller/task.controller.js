@@ -11,6 +11,7 @@ import {
 } from "../schema/task.schema.js";
 import { logTaskActivity } from "../utils/task-activity.js";
 import { createNotification } from "../utils/notification.js";
+import Notification from "../models/notification.model.js";
 
 export const createTask = async (req, res, next) => {
   try {
@@ -135,6 +136,8 @@ export const createTask = async (req, res, next) => {
       createdBy: req.user._id,
       status: "todo",
     });
+    // After creating and saving the task
+
     await logTaskActivity({
       workspaceId,
       projectId,
@@ -284,6 +287,7 @@ export const getProjectTasks = async (req, res, next) => {
     const filter = {
       workspace: workspaceId,
       project: projectId,
+      deletedAt: null,
     };
 
     // Regular employees only see their assigned tasks
@@ -429,8 +433,21 @@ export const updateTaskStatus = async (req, res, next) => {
       }
     }
 
+    const previousStatus = task.status;
     task.status = validation.data.status;
     await task.save();
+
+    if (previousStatus !== task.status && task.assignedTo) {
+      await createNotification({
+        workspaceId,
+        recipientId: task.assignedTo,
+        actorId: req.user._id,
+        type: "task_status_changed",
+        title: "Task status updated",
+        message: `The status of "${task.title}" changed to ${task.status}.`,
+        taskId: task._id,
+      });
+    }
 
     await logTaskActivity({
       workspaceId,
@@ -583,8 +600,39 @@ export const updateTask = async (req, res, next) => {
     }
 
     // 8. Apply only fields supplied by the client
+
+    const previousAssigneeId = task.assignedTo?.toString() || null;
+
     Object.assign(task, updates);
     await task.save();
+
+    if (Object.prototype.hasOwnProperty.call(updates, "assignedTo")) {
+      const newAssigneeId = task.assignedTo?.toString() || null;
+
+      if (newAssigneeId !== previousAssigneeId && newAssigneeId) {
+        await createNotification({
+          workspaceId,
+          recipientId: task.assignedTo,
+          actorId: req.user._id,
+          type: "task_reassigned",
+          title: "Task assigned to you",
+          message: `You have been assigned: ${task.title}`,
+          taskId: task._id,
+        });
+      }
+
+      if (previousAssigneeId && previousAssigneeId !== newAssigneeId) {
+        await createNotification({
+          workspaceId,
+          recipientId: previousAssigneeId,
+          actorId: req.user._id,
+          type: "task_reassigned",
+          title: "Task assignment changed",
+          message: `The assignment for "${task.title}" has changed.`,
+          taskId: task._id,
+        });
+      }
+    }
 
     return res.status(200).json({
       success: true,
@@ -661,24 +709,28 @@ export const deleteTask = async (req, res, next) => {
       });
     }
 
-    // 6. Soft-delete the task
+    // 6. Find and soft-delete the task
     const task = await Task.findOneAndUpdate(
       {
         _id: taskId,
-        workspace: workspaceId,
         project: projectId,
-        deletedAt: null,
+        workspace: workspaceId,
+        $or: [{ deletedAt: null }, { deletedAt: { $exists: false } }],
       },
       {
         $set: { deletedAt: new Date() },
       },
-      { returnDocument: "after" },
+      {
+        new: true,
+        runValidators: true,
+      },
     );
 
     if (!task) {
       return res.status(404).json({
         success: false,
-        message: "Task not found or already deleted",
+        message:
+          "Task not found, already deleted, or its workspace/project does not match",
       });
     }
 

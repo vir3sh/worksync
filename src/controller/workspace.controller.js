@@ -448,3 +448,97 @@ export const removeWorkspaceMember = async (req, res, next) => {
     next(error);
   }
 };
+
+export const updateWorkspaceMemberRole = async (req, res, next) => {
+  try {
+    const { workspaceId, userId } = req.params;
+    const { role } = req.body;
+
+    if (
+      !mongoose.isValidObjectId(workspaceId) ||
+      !mongoose.isValidObjectId(userId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid workspace or user ID",
+      });
+    }
+
+    if (!["employee", "manager", "admin"].includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid workspace role",
+      });
+    }
+
+    // The workspace must exist and be active.
+    const workspace = await Workspace.findOne({
+      _id: workspaceId,
+      status: "active",
+    }).select("_id");
+
+    if (!workspace) {
+      return res.status(404).json({
+        success: false,
+        message: "Workspace not found",
+      });
+    }
+
+    // The requester must belong to this workspace.
+    const requesterMembership = await WorkspaceMember.findOne({
+      workspace: workspaceId,
+      user: req.user._id,
+      status: "active",
+    });
+
+    if (!requesterMembership) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not an active workspace member",
+      });
+    }
+
+    // HR or managers may change workspace roles.
+    if (!["hr", "manager"].includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: "Only HR and managers can change workspace roles",
+      });
+    }
+
+    const targetMembership = await WorkspaceMember.findOne({
+      workspace: workspaceId,
+      user: userId,
+      status: "active",
+    });
+
+    if (!targetMembership) {
+      return res.status(404).json({
+        success: false,
+        message: "Workspace member not found",
+      });
+    }
+
+    // Never allow the owner role to be reassigned or overwritten.
+    if (targetMembership.role === "owner") {
+      return res.status(403).json({
+        success: false,
+        message: "The workspace owner's role cannot be changed here",
+      });
+    }
+
+    targetMembership.role = role;
+    await targetMembership.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Workspace member role updated successfully",
+      data: {
+        userId,
+        role: targetMembership.role,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};

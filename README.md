@@ -2,7 +2,6 @@
 
 REST API for TaskFlow, a multi-workspace project and task management application built with **Node.js, Express, MongoDB, and Mongoose**.
 
-
 ## Features
 
 - User registration, login, logout, profile, and refresh-token rotation
@@ -102,18 +101,22 @@ All paths below are relative to `http://localhost:3000`. Replace placeholders wi
 
 ### Authentication — `/api/users`
 
-| Method | Path | Description |
-|---|---|---|
-| POST | `/api/users/register` | Register a user |
-| POST | `/api/users/login` | Log in |
-| POST | `/api/users/logout` | Log out / revoke refresh session |
-| POST | `/api/users/refresh` | Refresh access/refresh cookies |
-| GET | `/api/users/me` | Current user profile |
+| Method | Path                  | Description                      |
+| ------ | --------------------- | -------------------------------- |
+| POST   | `/api/users/register` | Register a user                  |
+| POST   | `/api/users/login`    | Log in                           |
+| POST   | `/api/users/logout`   | Log out / revoke refresh session |
+| POST   | `/api/users/refresh`  | Refresh access/refresh cookies   |
+| GET    | `/api/users/me`       | Current user profile             |
 
 Registration body:
 
 ```json
-{ "name": "Example User", "email": "user@example.com", "password": "StrongPassword123!" }
+{
+  "name": "Example User",
+  "email": "user@example.com",
+  "password": "StrongPassword123!"
+}
 ```
 
 Login body:
@@ -124,13 +127,13 @@ Login body:
 
 ### Workspaces — `/api/workspaces`
 
-| Method | Path | Description |
-|---|---|---|
-| POST | `/api/workspaces/create-workspace` | Create workspace |
-| GET | `/api/workspaces/my-workspaces` | List joined workspaces |
-| DELETE | `/api/workspaces/:workspaceId` | Archive workspace |
-| POST | `/api/workspaces/:workspaceId/members` | Add workspace member |
-| GET | `/api/workspaces/:workspaceId/members` | List workspace members |
+| Method | Path                                           | Description                                                 |
+| ------ | ---------------------------------------------- | ----------------------------------------------------------- |
+| POST   | `/api/workspaces/create-workspace`             | Create workspace                                            |
+| GET    | `/api/workspaces/my-workspaces`                | List joined workspaces                                      |
+| DELETE | `/api/workspaces/:workspaceId`                 | Archive workspace                                           |
+| POST   | `/api/workspaces/:workspaceId/members`         | Add workspace member                                        |
+| GET    | `/api/workspaces/:workspaceId/members`         | List workspace members                                      |
 | DELETE | `/api/workspaces/:workspaceId/members/:userId` | Suspend member access and remove active project memberships |
 
 Create workspace body:
@@ -149,21 +152,21 @@ Add member body (user must already exist):
 
 **Important:** The project router is mounted at `/api/projects`, and its paths start with `/:workspaceId/projects`. The repeated word `projects` in the complete URL is intentional in the current source.
 
-| Method | Path | Description |
-|---|---|---|
-| POST | `/api/projects/:workspaceId/projects` | Create project |
-| GET | `/api/projects/:workspaceId/projects` | List workspace projects |
-| DELETE | `/api/projects/:workspaceId/projects/:projectId` | Archive project |
-| POST | `/api/projects/:workspaceId/projects/:projectId/members` | Add project member |
-| GET | `/api/projects/:workspaceId/projects/:projectId/members` | List project members |
-| DELETE | `/api/projects/:workspaceId/projects/:projectId/members/:userId` | Remove project member |
-| POST | `/api/projects/:workspaceId/projects/:projectId/tasks` | Create task |
-| GET | `/api/projects/:workspaceId/projects/:projectId/tasks` | List project tasks |
-| GET | `/api/projects/:workspaceId/projects/:projectId/tasks/:taskId` | Get task details |
-| PATCH | `/api/projects/:workspaceId/projects/:projectId/tasks/:taskId` | Edit task details |
-| PATCH | `/api/projects/:workspaceId/projects/:projectId/tasks/:taskId/status` | Update task status |
-| DELETE | `/api/projects/:workspaceId/projects/:projectId/tasks/:taskId` | Soft-delete task |
-| GET | `/api/projects/:workspaceId/projects/:projectId/tasks/:taskId/activity` | Task activity history |
+| Method | Path                                                                    | Description             |
+| ------ | ----------------------------------------------------------------------- | ----------------------- |
+| POST   | `/api/projects/:workspaceId/projects`                                   | Create project          |
+| GET    | `/api/projects/:workspaceId/projects`                                   | List workspace projects |
+| DELETE | `/api/projects/:workspaceId/projects/:projectId`                        | Archive project         |
+| POST   | `/api/projects/:workspaceId/projects/:projectId/members`                | Add project member      |
+| GET    | `/api/projects/:workspaceId/projects/:projectId/members`                | List project members    |
+| DELETE | `/api/projects/:workspaceId/projects/:projectId/members/:userId`        | Remove project member   |
+| POST   | `/api/projects/:workspaceId/projects/:projectId/tasks`                  | Create task             |
+| GET    | `/api/projects/:workspaceId/projects/:projectId/tasks`                  | List project tasks      |
+| GET    | `/api/projects/:workspaceId/projects/:projectId/tasks/:taskId`          | Get task details        |
+| PATCH  | `/api/projects/:workspaceId/projects/:projectId/tasks/:taskId`          | Edit task details       |
+| PATCH  | `/api/projects/:workspaceId/projects/:projectId/tasks/:taskId/status`   | Update task status      |
+| DELETE | `/api/projects/:workspaceId/projects/:projectId/tasks/:taskId`          | Soft-delete task        |
+| GET    | `/api/projects/:workspaceId/projects/:projectId/tasks/:taskId/activity` | Task activity history   |
 
 Create project body:
 
@@ -211,17 +214,17 @@ Valid task statuses: `todo`, `in-progress`, `in-review`, `completed`. Valid prio
 
 ### Notifications — `/api/notifications`
 
-| Method | Path | Description |
-|---|---|---|
-| GET | `/api/notifications` | Current user's notifications (`page`, `limit`, optional `workspaceId`) |
-| PATCH | `/api/notifications/read-all` | Mark all current user's notifications read |
-| PATCH | `/api/notifications/:notificationId/read` | Mark one notification read |
+| Method | Path                                      | Description                                                            |
+| ------ | ----------------------------------------- | ---------------------------------------------------------------------- |
+| GET    | `/api/notifications`                      | Current user's notifications (`page`, `limit`, optional `workspaceId`) |
+| PATCH  | `/api/notifications/read-all`             | Mark all current user's notifications read                             |
+| PATCH  | `/api/notifications/:notificationId/read` | Mark one notification read                                             |
 
 ### Dashboard — `/api/dashboard`
 
-| Method | Path | Description |
-|---|---|---|
-| GET | `/api/dashboard/workspaces/:workspaceId` | Workspace dashboard summary |
+| Method | Path                                     | Description                 |
+| ------ | ---------------------------------------- | --------------------------- |
+| GET    | `/api/dashboard/workspaces/:workspaceId` | Workspace dashboard summary |
 
 ## Authorization model
 
