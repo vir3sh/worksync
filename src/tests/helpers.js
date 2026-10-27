@@ -11,7 +11,7 @@ export const uniqueEmail = (prefix = "user") => {
 export async function registerUser(overrides = {}) {
   const agent = request.agent(app);
   const payload = {
-    name: "TaskFlow Test User",
+    name: "WorkSync Test User",
     email: uniqueEmail(),
     password: "TestPassword123!",
     ...overrides,
@@ -19,7 +19,9 @@ export async function registerUser(overrides = {}) {
 
   const response = await agent.post("/api/users/register").send(payload);
   if (response.status !== 201) {
-    throw new Error(`Test user registration failed (${response.status}): ${JSON.stringify(response.body)}`);
+    throw new Error(
+      `Test user registration failed (${response.status}): ${JSON.stringify(response.body)}`,
+    );
   }
 
   return { agent, user: response.body.data.user, password: payload.password };
@@ -35,12 +37,19 @@ export async function createWorkspace(agent, overrides = {}) {
     ...overrides,
   });
   if (response.status !== 201) {
-    throw new Error(`Test workspace creation failed (${response.status}): ${JSON.stringify(response.body)}`);
+    throw new Error(
+      `Test workspace creation failed (${response.status}): ${JSON.stringify(response.body)}`,
+    );
   }
   return response.body.data.workspace;
 }
 
-export async function addWorkspaceMember(ownerAgent, workspaceId, member, role = "employee") {
+export async function addWorkspaceMember(
+  ownerAgent,
+  workspaceId,
+  member,
+  role = "employee",
+) {
   return ownerAgent
     .post(`/api/workspaces/${workspaceId}/members`)
     .send({ email: member.email, role });
@@ -49,25 +58,50 @@ export async function addWorkspaceMember(ownerAgent, workspaceId, member, role =
 export async function createProject(agent, workspaceId, overrides = {}) {
   const response = await agent
     .post(`/api/projects/${workspaceId}/projects`)
-    .send({ name: "Test Project", description: "Project created by automated tests", priority: "medium", ...overrides });
+    .send({
+      name: "Test Project",
+      description: "Project created by automated tests",
+      priority: "medium",
+      ...overrides,
+    });
   if (response.status !== 201) {
-    throw new Error(`Test project creation failed (${response.status}): ${JSON.stringify(response.body)}`);
+    throw new Error(
+      `Test project creation failed (${response.status}): ${JSON.stringify(response.body)}`,
+    );
   }
   return response.body.data.project;
 }
 
-export async function addProjectMember(agent, workspaceId, projectId, userId, role = "member") {
+export async function addProjectMember(
+  agent,
+  workspaceId,
+  projectId,
+  userId,
+  role = "member",
+) {
   return agent
     .post(`/api/projects/${workspaceId}/projects/${projectId}/members`)
     .send({ userId, role });
 }
 
-export async function createTask(agent, workspaceId, projectId, overrides = {}) {
+export async function createTask(
+  agent,
+  workspaceId,
+  projectId,
+  overrides = {},
+) {
   const response = await agent
     .post(`/api/projects/${workspaceId}/projects/${projectId}/tasks`)
-    .send({ title: "Test Task", description: "Task created by automated tests", priority: "medium", ...overrides });
+    .send({
+      title: "Test Task",
+      description: "Task created by automated tests",
+      priority: "medium",
+      ...overrides,
+    });
   if (response.status !== 201) {
-    throw new Error(`Test task creation failed (${response.status}): ${JSON.stringify(response.body)}`);
+    throw new Error(
+      `Test task creation failed (${response.status}): ${JSON.stringify(response.body)}`,
+    );
   }
   return response.body.data;
 }
@@ -78,9 +112,15 @@ export async function createProjectFixture() {
   const outsider = await registerUser({ name: "Outsider" });
   const workspace = await createWorkspace(owner.agent);
 
-  const addMemberResponse = await addWorkspaceMember(owner.agent, workspace.id, employee.user);
+  const addMemberResponse = await addWorkspaceMember(
+    owner.agent,
+    workspace.id,
+    employee.user,
+  );
   if (addMemberResponse.status !== 201) {
-    throw new Error(`Adding test employee failed (${addMemberResponse.status}): ${JSON.stringify(addMemberResponse.body)}`);
+    throw new Error(
+      `Adding test employee failed (${addMemberResponse.status}): ${JSON.stringify(addMemberResponse.body)}`,
+    );
   }
 
   const project = await createProject(owner.agent, workspace.id);
@@ -91,7 +131,9 @@ export async function createProjectFixture() {
     employee.user.id,
   );
   if (projectMemberResponse.status !== 201) {
-    throw new Error(`Adding test project member failed (${projectMemberResponse.status}): ${JSON.stringify(projectMemberResponse.body)}`);
+    throw new Error(
+      `Adding test project member failed (${projectMemberResponse.status}): ${JSON.stringify(projectMemberResponse.body)}`,
+    );
   }
 
   return { owner, employee, outsider, workspace, project };

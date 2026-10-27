@@ -110,18 +110,18 @@ export const createUser = async (req, res, next) => {
     // Send welcome email without blocking the response.
     transporter
       .sendMail({
-        from: `"TaskFlow" <${process.env.SMTP_USER}>`,
+        from: `"WorkSync" <${process.env.SMTP_USER}>`,
         to: user.email,
-        subject: "Welcome to TaskFlow!",
+        subject: "Welcome to WorkSync!",
         text: `Hi ${user.name},
 
-Welcome to TaskFlow!
+Welcome to WorkSync!
 
 Your account has been created successfully.
 You can now start organizing your projects and tasks.
 
 Thanks,
-The TaskFlow Team`,
+The WorkSync Team`,
       })
       .then(() => {
         console.log("Welcome email sent successfully");

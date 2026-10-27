@@ -1,6 +1,6 @@
-# TaskFlow — Backend API
+# WorkSync — Backend API
 
-REST API for TaskFlow, a multi-workspace project and task management application built with **Node.js, Express, MongoDB, and Mongoose**.
+REST API for Work, a multi-workspace project and task management application built with **Node.js, Express, MongoDB, and Mongoose**.
 
 ## Features
 
@@ -55,7 +55,7 @@ Create `.env` in the backend root:
 ```dotenv
 NODE_ENV=development
 PORT=3000
-MONGO_URL=mongodb://127.0.0.1:27017/taskflow
+MONGO_URL=mongodb://127.0.0.1:27017/WorkSync
 ACCESS_TOKEN_SECRET=replace-with-a-long-random-secret
 REFRESH_TOKEN_SECRET=replace-with-a-different-long-random-secret
 ACCESS_TOKEN_EXPIRES_IN=15m

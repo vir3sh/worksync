@@ -36,6 +36,11 @@ const userSchema = new mongoose.Schema(
       enum: ["active", "inactive"],
       default: "active",
     },
+
+    canCreateWorkspace: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
