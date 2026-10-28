@@ -163,63 +163,85 @@ export const getPendingInvitations = async (req, res) => {
 };
 
 export const acceptWorkspaceInvitation = async (req, res) => {
-  const session = await mongoose.startSession();
-
   try {
     const { invitationId } = req.params;
 
-    if (!isValidObjectId(invitationId)) {
+    if (!mongoose.isValidObjectId(invitationId)) {
       return res.status(400).json({
         success: false,
         message: "Invalid invitation ID",
       });
     }
 
-    let responseData;
-
-    await session.withTransaction(async () => {
-      const invitation = await WorkspaceInvitation.findOne({
+    // Atomically claim a valid pending invitation.
+    const invitation = await WorkspaceInvitation.findOneAndUpdate(
+      {
         _id: invitationId,
         invitedUser: req.user._id,
         status: "pending",
-      }).session(session);
+        expiresAt: { $gt: new Date() },
+      },
+      {
+        $set: { status: "accepted" },
+      },
+      { new: true },
+    );
 
-      if (!invitation) {
-        const error = new Error("Invitation not found or already processed");
-        error.statusCode = 404;
-        throw error;
+    if (!invitation) {
+      const existingInvitation = await WorkspaceInvitation.findOne({
+        _id: invitationId,
+        invitedUser: req.user._id,
+        status: "pending",
+      });
+
+      if (existingInvitation && existingInvitation.expiresAt <= new Date()) {
+        await WorkspaceInvitation.updateOne(
+          {
+            _id: invitationId,
+            invitedUser: req.user._id,
+            status: "pending",
+          },
+          { $set: { status: "expired" } },
+        );
+
+        return res.status(410).json({
+          success: false,
+          message: "This invitation has expired",
+        });
       }
 
-      if (invitation.expiresAt <= new Date()) {
-        invitation.status = "expired";
-        await invitation.save({ session });
+      return res.status(404).json({
+        success: false,
+        message: "Invitation not found or already processed",
+      });
+    }
 
-        const error = new Error("This invitation has expired");
-        error.statusCode = 410;
-        throw error;
-      }
-
-      const workspace = await Workspace.findById(invitation.workspace).session(
-        session,
-      );
+    try {
+      const workspace = await Workspace.findById(invitation.workspace);
 
       if (!workspace || workspace.status === "archived") {
-        const error = new Error("Workspace is no longer available");
-        error.statusCode = 404;
-        throw error;
+        await WorkspaceInvitation.updateOne(
+          { _id: invitation._id, status: "accepted" },
+          { $set: { status: "pending" } },
+        );
+
+        return res.status(404).json({
+          success: false,
+          message: "Workspace is no longer available",
+        });
       }
 
-      const membership = await WorkspaceMember.findOne({
+      let membership = await WorkspaceMember.findOne({
         workspace: invitation.workspace,
         user: req.user._id,
-      }).session(session);
+      });
 
       if (membership?.status === "active") {
-        invitation.status = "accepted";
-        await invitation.save({ session });
-
-        responseData = { membership, invitation };
-        return;
+        return res.status(200).json({
+          success: true,
+          message: "You are already a member of this workspace",
+          data: { membership, invitation },
+        });
       }
 
       if (membership) {
@@ -227,49 +249,38 @@ export const acceptWorkspaceInvitation = async (req, res) => {
         membership.status = "active";
         membership.joinedAt = new Date();
 
-        await membership.save({ session });
-
-        responseData = { membership, invitation };
+        await membership.save();
       } else {
-        const [newMembership] = await WorkspaceMember.create(
-          [
-            {
-              workspace: invitation.workspace,
-              user: req.user._id,
-              role: invitation.role,
-              status: "active",
-              joinedAt: new Date(),
-            },
-          ],
-          { session },
-        );
-
-        responseData = {
-          membership: newMembership,
-          invitation,
-        };
+        membership = await WorkspaceMember.create({
+          workspace: invitation.workspace,
+          user: req.user._id,
+          role: invitation.role,
+          status: "active",
+          joinedAt: new Date(),
+        });
       }
 
-      invitation.status = "accepted";
-      await invitation.save({ session });
-    });
+      return res.status(200).json({
+        success: true,
+        message: "Workspace invitation accepted successfully",
+        data: { membership, invitation },
+      });
+    } catch (error) {
+      // Restore the invitation so the user can retry after a failure.
+      await WorkspaceInvitation.updateOne(
+        { _id: invitation._id, status: "accepted" },
+        { $set: { status: "pending" } },
+      );
 
-    return res.status(200).json({
-      success: true,
-      message: "Workspace invitation accepted successfully",
-      data: responseData,
-    });
+      throw error;
+    }
   } catch (error) {
     console.error("Accept workspace invitation error:", error);
 
-    return res.status(error.statusCode || 500).json({
+    return res.status(500).json({
       success: false,
-      message: error.statusCode
-        ? error.message
-        : "Failed to accept workspace invitation",
+      message: "Failed to accept workspace invitation",
     });
-  } finally {
-    await session.endSession();
   }
 };
 
