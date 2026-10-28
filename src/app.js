@@ -7,6 +7,7 @@ import workspaceRouter from "./routes/workspace.routes.js";
 import projectRouter from "./routes/project.routes.js";
 import notificationRouter from "./routes/notification.routes.js";
 import dashRouter from "./routes/dashboard.routes.js";
+import adminRouter from "./routes/admin.routes.js";
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use("/api/workspaces", workspaceRouter);
 app.use("/api/projects", projectRouter);
 app.use("/api/notifications", notificationRouter);
 app.use("/api/dashboard", dashRouter);
+app.use("/api/admin", adminRouter);
 
 // Central error handler
 app.use((err, req, res, next) => {

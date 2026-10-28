@@ -36,6 +36,11 @@ const userSchema = new mongoose.Schema(
       enum: ["active", "inactive"],
       default: "active",
     },
+    isSystemAdmin: {
+      type: Boolean,
+      default: false,
+      select: false,
+    },
 
     canCreateWorkspace: {
       type: Boolean,
