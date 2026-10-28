@@ -20,7 +20,7 @@ const corsOption = {
 };
 app.use(cors(corsOption));
 app.get("/", (req, res) => {
-  res.send("Hello, World!");
+  res.send("API IS WORKING");
 });
 
 app.use("/api/users", UserRouter);
