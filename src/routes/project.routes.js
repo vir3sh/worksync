@@ -58,7 +58,6 @@ projectRouter.get(
 projectRouter.post(
   "/:workspaceId/projects/:projectId/tasks",
   authenticateUser,
-  requireTaskAssignmentRole,
   createTask,
 );
 
