@@ -408,22 +408,18 @@ export const logoutUser = async (req, res, next) => {
   try {
     const refreshToken = req.cookies?.refreshToken;
 
-    // Clear authentication cookies in the browser.
-    res.clearCookie("accessToken", {
+    const clearCookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       path: "/",
-    });
+    };
 
-    res.clearCookie("refreshToken", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-    });
+    // Clear both authentication cookies.
+    res.clearCookie("accessToken", clearCookieOptions);
+    res.clearCookie("refreshToken", clearCookieOptions);
 
-    // Revoke this refresh session in MongoDB.
+    // Revoke the refresh session in MongoDB.
     if (refreshToken) {
       await RefreshSession.findOneAndUpdate(
         {
@@ -433,7 +429,6 @@ export const logoutUser = async (req, res, next) => {
         {
           $set: { revokedAt: new Date() },
         },
-        { returnDocument: "after" },
       );
     }
 
