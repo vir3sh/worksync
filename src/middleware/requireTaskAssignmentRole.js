@@ -1,8 +1,10 @@
 export function requireTaskAssignmentRole(req, res, next) {
-  if (!["hr", "manager"].includes(req.user?.role)) {
+  const workspaceRole = req.workspaceMember?.role;
+
+  if (!["owner", "admin", "manager"].includes(workspaceRole)) {
     return res.status(403).json({
       success: false,
-      message: "Only HR and managers can assign tasks.",
+      message: "You do not have permission to assign tasks.",
     });
   }
 
