@@ -82,7 +82,7 @@ projectRouter.patch(
 projectRouter.delete(
   "/:workspaceId/projects/:projectId/tasks/:taskId",
   authenticateUser,
-  requireTaskManagementRole,
+
   deleteTask,
 );
 
