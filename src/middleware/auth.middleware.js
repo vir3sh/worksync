@@ -35,7 +35,7 @@ const authenticateUser = async (req, res, next) => {
     }
 
     const user = await User.findById(decoded.userId).select(
-      "_id name email role status",
+      "_id name email role status canCreateWorkspace",
     );
 
     if (!user) {
